@@ -68,7 +68,7 @@ async function main() {
   const html = await loadEatAndMeetHtmlJquery(SOURCE_EAT_AND_MEET);
   const doc = parseHtml(html);
   const meals = parseEatAndMeetJquery(doc);
-  const commonMeals = parseEatAndMeetFastFoodJQuery(doc);
+  const commonMeals = parseEatAndMeetCommonMealsJQuery(doc);
 
   console.log(meals);
   console.log(commonMeals);
