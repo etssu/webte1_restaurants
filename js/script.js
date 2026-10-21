@@ -38,6 +38,28 @@ function parseEatAndMeetJquery(doc) {
   return days;
 }
 
+function parseEatAndMeetCommonMealsJQuery(doc) {
+  const commonMeals = [];
+
+  $(doc).find("section.weak-menu.our-menu")
+  .find(".menu-body").each(function () {
+      const $meal = $(this);
+      const title = cleanText($meal.find("h5").text());
+      const match = title.match(/\(([\d,\s]+)\)\s*$/);
+
+      commonMeals.push({
+        title: cleanText(title.replace(/\s*\([\d,\s]+\)\s*$/, "")),
+        price: cleanText($meal.find(".price").text()),
+        description: cleanText($meal.find(".desc").text()),
+        allergens: match ? match[1].replace(/\s/g, "") : "",
+        image: $meal.find("img").attr("src") || ""
+      });
+    });
+
+  return commonMeals;
+}
+
+
 function parseHtml(html) {
   return new DOMParser().parseFromString(html, "text/html");
 }
@@ -46,8 +68,10 @@ async function main() {
   const html = await loadEatAndMeetHtmlJquery(SOURCE_EAT_AND_MEET);
   const doc = parseHtml(html);
   const meals = parseEatAndMeetJquery(doc);
+  const commonMeals = parseEatAndMeetFastFoodJQuery(doc);
 
   console.log(meals);
+  console.log(commonMeals);
 }
 
 main();
