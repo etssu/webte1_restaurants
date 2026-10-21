@@ -6,12 +6,8 @@ function cleanText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function loadEatAndMeetHtmlJquery() {
-  return $.ajax({ url: SOURCE_EAT_AND_MEET, dataType: "text" });
-}
-
-function loadNaseHospodaHtmlJquery() {
-  return $.ajax({url: SOURCE_NASE_HOSPODA, dataType: "text"});
+function loadHtmlJQuery(url) {
+  return $.ajax({url: url, dataType: "text"});
 }
 
 
@@ -149,15 +145,109 @@ function parseNaseHospodaSpecialJQuery(doc) {
 }
 
 
+function parseRestauraciaDragJQuery(doc) {
+  const days = [];
+
+  const dayNames = {
+    pondelok: "Pondelok",
+    utorok: "Utorok",
+    streda: "Streda",
+    stvrtok: "Štvrtok",
+    piatok: "Piatok"
+  };
+
+  $(doc).find(".tab-pane[id]").each(function () {
+    const $day = $(this);
+    const dayName = dayNames[$day.attr("id")];
+
+    if (!dayName) {
+      return;
+    }
+
+    const meals = [];
+
+    // Soup
+    const $soupHeading = $day.find("h3").filter(function () {
+      return cleanText($(this).text()).toUpperCase() === "POLIEVKA";
+    }).first();
+
+    if ($soupHeading.length) {
+      let soupText = "";
+      let node = $soupHeading.closest(".menu_box_title")[0].nextSibling;
+
+      while (node && !(node.nodeType === 1 && $(node).hasClass("menu_box_title"))) {
+        soupText += node.textContent || "";
+        node = node.nextSibling;
+      }
+
+      soupText = cleanText(soupText);
+
+      const soupAllergens = soupText.match(/\/([\d,\s]+)\//);
+      const soupWeight = soupText.match(/^\d+(?:,\d+)?\s*(?:g|kg|ml|l)/i);
+
+      meals.push({
+        title: cleanText(
+          soupText
+            .replace(/\/([\d,\s]+)\//, "")
+            .replace(/^\d+(?:,\d+)?\s*(?:g|kg|ml|l)\s*/i, "")
+        ),
+        weight: soupWeight ? cleanText(soupWeight[0]) : "",
+        type: "Polievka",
+        allergens: soupAllergens ? soupAllergens[1].replace(/\s/g, "") : "",
+        price: ""
+      });
+    }
+
+    // Main dishes
+    $day.find("table tr").each(function () {
+      const $cells = $(this).children("td");
+      const rawTitle = cleanText($cells.eq(0).text());
+      const price = cleanText($cells.eq(1).text());
+
+      if (!rawTitle || !price) {
+        return;
+      }
+
+      const allergensMatch = rawTitle.match(/\/([\d,\s]+)\//);
+      const weightMatch = rawTitle.match(
+        /^\d+(?:,\d+)?\s*(?:g|kg|ml|l)(?:\s*\/\s*\d+(?:,\d+)?\s*g)?/i
+      );
+
+      meals.push({
+        title: cleanText(
+          rawTitle
+            .replace(/\/([\d,\s]+)\//, "")
+            .replace(/^\d+(?:,\d+)?\s*(?:g|kg|ml|l)(?:\s*\/\s*\d+(?:,\d+)?\s*g)?\s*/i, "")
+        ),
+        weight: weightMatch ? cleanText(weightMatch[0]) : "",
+        type: "Hlavné jedlo",
+        allergens: allergensMatch ? allergensMatch[1].replace(/\s/g, "") : "",
+        price: price
+      });
+    });
+
+    days.push({
+      day: dayName,
+      meals: meals
+    });
+  });
+
+  return days;
+}
+
+
+
 function parseHtml(html) {
   return new DOMParser().parseFromString(html, "text/html");
 }
 
 async function main() {
-  const htmlEAM = await loadEatAndMeetHtmlJquery(SOURCE_EAT_AND_MEET);
-  const htmlNH = await loadNaseHospodaHtmlJquery(SOURCE_NASE_HOSPODA);
+  const htmlEAM = await loadHtmlJQuery(SOURCE_EAT_AND_MEET);
+  const htmlNH = await loadHtmlJQuery(SOURCE_NASE_HOSPODA);
+  const htmlRD = await loadHtmlJQuery(SOURCE_RESTAURACIA_DRAG);
   const doc1 = parseHtml(htmlEAM);
   const doc2 = parseHtml(htmlNH);
+  const doc3 = parseHtml(htmlRD);
 
   const mealsEAM = parseEatAndMeetJquery(doc1);
   const commonMealsEAM = parseEatAndMeetCommonMealsJQuery(doc1);
@@ -165,11 +255,15 @@ async function main() {
   const mealsNH = parseNaseHospodaJQuery(doc2);
   const special = parseNaseHospodaSpecialJQuery(doc2);
 
+  const mealsRD = parseRestauraciaDragJQuery(doc3);
+
   console.log(mealsEAM);
   console.log(commonMealsEAM);
 
   console.log(mealsNH);
   console.log(special);
+
+  console.log(mealsRD);
 }
 
 main();
