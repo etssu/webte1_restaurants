@@ -2,6 +2,9 @@ SOURCE_EAT_AND_MEET= "source/eat-and-meet.html"
 SOURCE_NASE_HOSPODA = "source/nase-hospoda.html"
 SOURCE_RESTAURACIA_DRAG = "source/restauracia-drag.html"
 
+let selectedRestaurant = null;
+let selectedDay = 1;
+
 const DAYS_SK = [
   "Pondelok",
   "Utorok",
@@ -40,6 +43,16 @@ function normalizeMenu(day, date, category, meals, title="") {
     category: category || "daily",
     meals: meals.map(normalizeMeal)
   };
+}
+
+function getMealCategory(meal) {
+  const type = meal.type.toLowerCase();
+
+  if (type.includes("poliev")) {
+    return "Polievky";
+  }
+
+  return "Hlavné jedlá";
 }
 
 function normalizeRestaurant(restaurant, menus) {
@@ -304,6 +317,125 @@ function parseRestauraciaDragJQuery(doc) {
   return menus;
 }
 
+function createMealCard(meal) {
+  const card = $("<article>").addClass("meal-card card p-3 mb-3");
+
+  $("<span>").addClass("meal-card-type").text(meal.type).appendTo(card);
+
+  $("<h3>").addClass("meal-card-title").text(meal.title).appendTo(card);
+
+  if (meal.weight){
+    $("<p>").addClass("meal-card-details").text(meal.weight).appendTo(card);
+  }
+
+    $("<p>").addClass("meal-card-price").text(meal.price).appendTo(card);
+
+  if (meal.allergens){
+    $("<p>").addClass("meal-card-allergens").text(`Alergény: ${meal.allergens}`).appendTo(card);
+  }
+  return card;
+
+}
+
+function renderMenus(menus) {
+  const container = $("#meals-container");
+  container.empty();
+
+  const meals = menus.flatMap(menu => menu.meals);
+
+  const categories = {
+    "Polievky": [],
+    "Hlavné jedlá": []
+  };
+
+  meals.forEach(meal => {
+    const category = getMealCategory(meal);
+    categories[category].push(meal);
+  });
+
+  Object.entries(categories).forEach(([category, categoryMeals]) => {
+    if (categoryMeals.length === 0) {
+      return;
+    }
+
+    const section = $("<section>").addClass("menu-category");
+
+    $("<h2>")
+      .addClass("menu-category-title")
+      .text(category)
+      .appendTo(section);
+
+    const grid = $("<div>").addClass("meals-grid");
+
+    categoryMeals.forEach(meal => {
+      const card = createMealCard(meal);
+
+      grid.append(card);
+    });
+
+    section.append(grid);
+    container.append(section);
+  });
+}
+
+
+
+function renderRestaurants(restaurants){
+  const container = $("#restaurants-container");
+  container.empty();
+
+  restaurants.forEach((restaurant, index) => {
+
+    const card = $(`
+      <div class="col-12 col-md-4">
+        <button type="button" class="restaurant-card w-100 h-100">
+          <h3 class="h5 mb-0"></h3>
+        </button>
+      </div>
+    `);
+
+    card.find("h3").text(restaurant.restaurant);
+    card.find("button").attr("data-restaurant-index", index);
+
+    if (index === 0) {
+      card.find("button").addClass("active");
+    }
+
+    container.append(card);
+  });
+
+  container.off("click", ".restaurant-card").on("click", ".restaurant-card", function () {
+    const index = $(this).attr("data-restaurant-index");
+    selectedRestaurant = restaurants[index];
+    selectDay(selectedDay);
+
+    $(".restaurant-card").removeClass("active");
+    $(this).addClass("active");
+
+    console.log("Selected restaurant:", selectedRestaurant.restaurant);
+    console.log("Available menus:", selectedRestaurant.menus);
+  });
+
+}
+
+function selectDay(dayNumber) {
+  if (!selectedRestaurant) {
+    console.log("Najprv vyberte reštauráciu.");
+    return;
+  }
+
+  const dayButtons = $("#day-selector .day-button");
+  const selectedButton = dayButtons.filter(`[data-day="${dayNumber}"]`);
+  const day = selectedButton.text().trim();
+
+  const menus = selectedRestaurant.menus.filter(menu => menu.day === day);
+  renderMenus(menus);
+
+  console.log("Selected day:", day);
+  console.log("Menus for selected day:", menus);
+}
+
+
 async function main() {
   try {
     const [htmlEAM, htmlNH, htmlRD] = await Promise.all([
@@ -343,6 +475,25 @@ async function main() {
       restaurantRD
     ];
 
+    renderRestaurants(restaurants);
+    selectedRestaurant = restaurants[0];
+    selectDay(selectedDay);
+
+
+    $("#day-selector")
+    .off("click", ".day-button")
+    .on("click", ".day-button", function () {
+      selectedDay = Number($(this).attr("data-day"));
+
+      $("#day-selector .day-button").removeClass("active");
+      $(this).addClass("active");
+
+      selectDay(selectedDay);
+    });
+
+    $("#day-selector .day-button[data-day='1']").addClass("active");
+    selectDay(selectedDay);
+
     console.log(restaurants);
 
     return restaurants;
@@ -353,5 +504,14 @@ async function main() {
     );
   }
 }
+
+$(document).ready(function () {
+    $("#menu-toggle").on("click", function () {
+        $("#main-nav").toggleClass("open");
+
+        const isOpen = $("#main-nav").hasClass("open");
+        $(this).attr("aria-expanded", String(isOpen));
+    });
+});
 
 main();
