@@ -9,6 +9,7 @@
   --color-accent: #E6AACE;
   --color-secondary: #344966;
   --color-text: #0D1821;
+  --color-active: #8CA9A0;
 
   --color-surface: #FFFFFF;
   --color-border: var(--color-primary);
@@ -19,10 +20,36 @@
   --radius-button: 12px;
   --transition-default: 0.2s ease;
 }
+@font-face {
+    font-family: 'Nunito';
+    src: url('../fonts/Nunito-Regular.woff2') format('woff2');
+    font-weight: 400;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('../fonts/Nunito-Medium.woff2') format('woff2');
+    font-weight: 500;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('../fonts/Nunito-Bold.woff2') format('woff2');
+    font-weight: 700;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('../fonts/Nunito-BoldItalic.woff2') format('woff2');
+    font-weight: 700;
+    font-style: italic;
+}
+@font-face {
+    font-family: 'Nunito';
+    src: url('../fonts/Nunito-Italic.woff2') format('woff2');
+    font-style: italic;
+}
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: 'Nunito', Helvetica;
   background-color: var(--color-background);
   color: var(--color-text);
 }
@@ -151,9 +178,9 @@ main {
 }
 
 .restaurant-card.active {
-  background-color: var(--color-secondary);
+  background-color: var(--color-primary);
   border-color: var(--color-secondary);
-  color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .restaurant-card h3 {
@@ -188,9 +215,9 @@ main {
 }
 
 .day-button.active {
-  background-color: var(--color-secondary);
+  background-color: var(--color-primary);
   border-color: var(--color-secondary);
-  color: var(--color-surface);
+  color: var(--color-text);
 }
 
 .restaurant-card:focus-visible,

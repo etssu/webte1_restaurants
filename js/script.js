@@ -110,19 +110,31 @@ function parseEatAndMeetJQuery(doc) {
 function parseEatAndMeetCommonMealsJQuery(doc) {
   const commonMeals = [];
 
-  $(doc).find("section.weak-menu.our-menu")
-  .find(".menu-body").each(function () {
+  $(doc).find("section.weak-menu.our-menu").each(function () {
+    const $section = $(this);
+
+    const previousHeading = cleanText(
+      $section.prevAll("section.menu-list-bg").first().find("h2").text()
+    ).toUpperCase();
+
+    const type = previousHeading === "LIVE MENU"
+      ? "Live menu"
+      : "Grill";
+
+    $section.find(".menu-body").each(function () {
       const $meal = $(this);
       const title = cleanText($meal.find("h5").text());
       const match = title.match(/\(([\d,\s]+)\)\s*$/);
 
       commonMeals.push({
         title: cleanText(title.replace(/\s*\([\d,\s]+\)\s*$/, "")),
+        type: type,
         price: cleanText($meal.find(".price").text()),
         allergens: match ? match[1].replace(/\s/g, "") : "",
         image: $meal.find("img").attr("src")
       });
     });
+  });
 
   return [
     normalizeMenu("", "", "common", commonMeals)
@@ -318,7 +330,7 @@ function parseRestauraciaDragJQuery(doc) {
 }
 
 function createMealCard(meal) {
-  const card = $("<article>").addClass("meal-card card p-3 mb-3");
+  const card = $("<article>").addClass("meal-card card mb-3");
 
   $("<span>").addClass("meal-card-type").text(meal.type).appendTo(card);
 
@@ -341,20 +353,12 @@ function renderMenus(menus) {
   const container = $("#meals-container");
   container.empty();
 
-  const meals = menus.flatMap(menu => menu.meals);
+  const dailyMenus = menus.filter(menu => menu.category === "daily");
+  const commonMenus = menus.filter(menu => menu.category === "common");
+  const specialMenus = menus.filter(menu => menu.category === "special");
 
-  const categories = {
-    "Polievky": [],
-    "Hlavné jedlá": []
-  };
-
-  meals.forEach(meal => {
-    const category = getMealCategory(meal);
-    categories[category].push(meal);
-  });
-
-  Object.entries(categories).forEach(([category, categoryMeals]) => {
-    if (categoryMeals.length === 0) {
+  function renderCategory(title, meals) {
+    if (meals.length === 0) {
       return;
     }
 
@@ -362,19 +366,43 @@ function renderMenus(menus) {
 
     $("<h2>")
       .addClass("menu-category-title")
-      .text(category)
+      .text(title)
       .appendTo(section);
 
     const grid = $("<div>").addClass("meals-grid");
 
-    categoryMeals.forEach(meal => {
-      const card = createMealCard(meal);
-
-      grid.append(card);
+    meals.forEach(meal => {
+      grid.append(createMealCard(meal));
     });
 
     section.append(grid);
     container.append(section);
+  }
+
+  dailyMenus.forEach(menu => {
+    const soups = menu.meals.filter(meal =>
+      getMealCategory(meal) === "Polievky"
+    );
+    const mainDishes = menu.meals.filter(meal =>
+      getMealCategory(meal) === "Hlavné jedlá"
+    );
+
+    renderCategory("Polievky", soups);
+    renderCategory("Hlavné jedlá", mainDishes);
+  });
+
+  commonMenus.forEach(menu => {
+    renderCategory(
+      menu.title || "Spoločná ponuka",
+      menu.meals
+    );
+  });
+
+  specialMenus.forEach(menu => {
+    renderCategory(
+      menu.title || "Špeciálna ponuka",
+      menu.meals
+    );
   });
 }
 
@@ -428,7 +456,13 @@ function selectDay(dayNumber) {
   const selectedButton = dayButtons.filter(`[data-day="${dayNumber}"]`);
   const day = selectedButton.text().trim();
 
-  const menus = selectedRestaurant.menus.filter(menu => menu.day === day);
+  const menus = selectedRestaurant.menus.filter(menu => {
+    return menu.day === day ||
+      (selectedRestaurant.restaurant === "Eat & Meet" &&
+        menu.category === "common") ||
+      (selectedRestaurant.restaurant === "Naše Hospoda" &&
+        menu.category === "special");
+  });
   renderMenus(menus);
 
   console.log("Selected day:", day);
