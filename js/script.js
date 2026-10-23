@@ -10,6 +10,10 @@ let showWholeWeek = false;
 
 const DAYS_SK = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function cleanText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
@@ -350,7 +354,7 @@ function createMealCard(meal) {
 
   $("<span>").addClass("meal-card-type").text(meal.type).appendTo(card);
 
-  $("<h3>").addClass("meal-card-title").text(meal.title).appendTo(card);
+  $("<h3>").addClass("meal-card-title h2").text(meal.title).appendTo(card);
 
   if (meal.weight) {
     $("<p>").addClass("meal-card-details").text(meal.weight).appendTo(card);
@@ -440,6 +444,25 @@ function renderMenus(restaurant, menus, wholeWeek = false) {
   });
 }
 
+function formatLastUpdated(lastUpdated) {
+  if (!lastUpdated) {
+    return "Čas aktualizácie nie je dostupný";
+  }
+
+  const date = new Date(lastUpdated);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Čas aktualizácie nie je dostupný";
+  }
+
+  return date.toLocaleString("sk-SK", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 function renderRestaurants(restaurants) {
   const container = $("#restaurants-container");
@@ -470,6 +493,11 @@ function renderRestaurants(restaurants) {
     card.find("h3").text(restaurant.restaurant);
     card.find(".restaurant-link").attr("href", restaurant.url);
     card.find(".address-text").text(restaurant.address);
+    $("<p>")
+    .addClass("restaurant-updated")
+    .text(`Posledná aktualizácia: ${formatLastUpdated(restaurant.lastUpdated)}`)
+    .appendTo(card.find(".restaurant-option"));
+
     card.find("button")
     .attr("data-restaurant-index", index)
     .toggleClass("active", visibleRestaurants.has(restaurant.restaurant))
@@ -536,42 +564,102 @@ function selectDay(dayNumber) {
   });
 }
 
-async function main() {
+function getTodayKey() {
+  const now = new Date();
+
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function loadCachedRestaurants() {
+  const savedData = localStorage.getItem("restaurantMenus");
+
+  if (!savedData) return null;
+
   try {
-    const [htmlEAM, htmlNH, htmlRD] = await Promise.all([
-      loadHtmlJQuery(SOURCE_EAT_AND_MEET),
-      loadHtmlJQuery(SOURCE_NASE_HOSPODA),
-      loadHtmlJQuery(SOURCE_RESTAURACIA_DRAG),
-    ]);
+    const cached = JSON.parse(savedData);
 
-    const docEAM = parseHtml(htmlEAM);
-    const docNH = parseHtml(htmlNH);
-    const docRD = parseHtml(htmlRD);
+    if (cached.date !== getTodayKey()) return null;
 
-    const restaurantEAM = normalizeRestaurant("Eat & Meet", [
-      ...parseEatAndMeetJQuery(docEAM),
-      ...parseEatAndMeetCommonMealsJQuery(docEAM),
-    ],
-      "https://eatandmeet.sk/",
-      "Staré Grunty 36, 841 04 Bratislava-Karlova Ves"
-    );
+    return cached.restaurants;
+  } catch (error) {
+    return null;
+  }
+}
 
-    const restaurantNH = normalizeRestaurant("Naše Hospoda", [
-      ...parseNaseHospodaJQuery(docNH),
-      ...parseNaseHospodaSpecialJQuery(docNH),
-    ],
-      "https://www.nasehospoda-karloveska.sk/",
-      "Segnerova 3, 841 04 Karlova Ves"
-    );
+function saveCachedRestaurants(restaurants) {
+  const now = new Date().toISOString();
 
-    const restaurantRD = normalizeRestaurant(
-      "Reštaurácia Drag",
-      parseRestauraciaDragJQuery(docRD),
-      "https://www.restauracia-drag.sk/restauracia-drag",
-      "Staré Grunty 64, 841 04 Bratislava - Karlova Ves"
-    );
+  const updatedRestaurants = restaurants.map(restaurant => ({
+    ...restaurant,
+    lastUpdated: now,
+  }));
 
-    restaurants = [restaurantEAM, restaurantNH, restaurantRD];
+  localStorage.setItem(
+    "restaurantMenus",
+    JSON.stringify({
+      date: getTodayKey(),
+      restaurants: updatedRestaurants,
+    })
+  );
+
+  return updatedRestaurants;
+}
+
+
+async function main() {
+  const startTime = Date.now();
+  $("#menu-loading").prop("hidden", false);
+
+  try {
+    const cachedRestaurants = loadCachedRestaurants();
+
+    if (cachedRestaurants) {
+      restaurants = cachedRestaurants;
+    } else {
+      const [htmlEAM, htmlNH, htmlRD] = await Promise.all([
+        loadHtmlJQuery(SOURCE_EAT_AND_MEET),
+        loadHtmlJQuery(SOURCE_NASE_HOSPODA),
+        loadHtmlJQuery(SOURCE_RESTAURACIA_DRAG),
+      ]);
+
+      const docEAM = parseHtml(htmlEAM);
+      const docNH = parseHtml(htmlNH);
+      const docRD = parseHtml(htmlRD);
+
+      const restaurantEAM = normalizeRestaurant(
+        "Eat & Meet",
+        [
+          ...parseEatAndMeetJQuery(docEAM),
+          ...parseEatAndMeetCommonMealsJQuery(docEAM),
+        ],
+        "https://eatandmeet.sk/",
+        "Staré Grunty 36, 841 04 Bratislava-Karlova Ves"
+      );
+
+      const restaurantNH = normalizeRestaurant(
+        "Naše Hospoda",
+        [
+          ...parseNaseHospodaJQuery(docNH),
+          ...parseNaseHospodaSpecialJQuery(docNH),
+        ],
+        "https://www.nasehospoda-karloveska.sk/",
+        "Segnerova 3, 841 04 Bratislava - Karlova Ves"
+      );
+
+      const restaurantRD = normalizeRestaurant(
+        "Reštaurácia Drag",
+        parseRestauraciaDragJQuery(docRD),
+        "https://www.restauracia-drag.sk/restauracia-drag",
+        "Staré Grunty 64, 841 04 Bratislava - Karlova Ves"
+      );
+
+      restaurants = saveCachedRestaurants([
+        restaurantEAM,
+        restaurantNH,
+        restaurantRD,
+      ]);
+    }
+
     visibleRestaurants = new Set(
       restaurants.map(restaurant => restaurant.restaurant)
     );
@@ -589,36 +677,36 @@ async function main() {
           .attr("aria-pressed", "false");
 
         $("#day-selector .day-button").removeClass("active");
-
         $(this).addClass("active");
 
         selectDay(selectedDay);
       });
 
-    $(`#day-selector .day-button[data-day="${selectedDay}"]`).addClass("active");
+    $(`#day-selector .day-button[data-day="${selectedDay}"]`)
+      .addClass("active");
 
     $("#week-view-toggle")
-    .off("click")
-    .on("click", function () {
-      showWholeWeek = !showWholeWeek;
+      .off("click")
+      .on("click", function () {
+        showWholeWeek = !showWholeWeek;
 
-      $(this)
-        .toggleClass("active", showWholeWeek)
-        .attr("aria-pressed", String(showWholeWeek));
+        $(this)
+          .toggleClass("active", showWholeWeek)
+          .attr("aria-pressed", String(showWholeWeek));
 
-      if (showWholeWeek) {
-        $("#day-selector .day-button")
-          .not("#week-view-toggle")
-          .removeClass("active");
-      } else {
-        $("#day-selector .day-button").removeClass("active");
+        if (showWholeWeek) {
+          $("#day-selector .day-button")
+            .not("#week-view-toggle")
+            .removeClass("active");
+        } else {
+          $("#day-selector .day-button").removeClass("active");
 
-        $(`#day-selector .day-button[data-day="${selectedDay}"]`)
-          .addClass("active");
-      }
+          $(`#day-selector .day-button[data-day="${selectedDay}"]`)
+            .addClass("active");
+        }
 
-      selectDay(selectedDay);
-    });
+        selectDay(selectedDay);
+      });
 
     selectDay(selectedDay);
 
@@ -626,17 +714,44 @@ async function main() {
 
     return restaurants;
   } catch (error) {
-    console.error("Nepodarilo sa načítať alebo spracovať menu:", error);
+    console.error(
+      "Nepodarilo sa načítať alebo spracovať menu:",
+      error
+    );
+  } finally {
+    const elapsed = Date.now() - startTime;
+    await delay(Math.max(0, 2000 - elapsed));
+
+    $("#menu-loading").prop("hidden", true);
   }
 }
 
-$(document).ready(function () {
-  $("#menu-toggle").on("click", function () {
-    $("#main-nav").toggleClass("open");
+$("#menu-toggle").on("click", function () {
+  $("#main-nav").toggleClass("open");
 
-    const isOpen = $("#main-nav").hasClass("open");
-    $(this).attr("aria-expanded", String(isOpen));
-  });
+  const isOpen = $("#main-nav").hasClass("open");
+
+  $(this).attr("aria-expanded", String(isOpen));
+});
+
+$("#refresh-menu").on("click", async function () {
+  $("#menu-loading").prop("hidden", false);
+  $(this).prop("disabled", true);
+
+  try {
+    localStorage.removeItem("restaurantMenus");
+    await main();
+  } finally {
+    $("#menu-loading").prop("hidden", true);
+    $(this).prop("disabled", false);
+  }
+});
+
+$("#clear-menu-cache").on("click", function () {
+  localStorage.removeItem("restaurantMenus");
+  $("#meals-container").empty();
+
+  alert("Uložené dáta boli vymazané.");
 });
 
 main();
