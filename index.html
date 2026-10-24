@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Obedové Menu</title>
 
-    <link rel="icon" type="image/x-icon" href="favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
     <!-- Bootstrap CSS -->
     <link
@@ -39,12 +39,10 @@
     <nav class="main-nav navbar navbar-expand-md" id="main-nav"
         aria-label="Hlavná navigácia">
         <div class="container">
-            <a href="index.html" class="nav-link active" aria-current="page">
-                Obedové menu
-            </a>
-            <a href="about.html" class="nav-link">
-                O projekte
-            </a>
+            <ul>
+                <li><a class="nav-link" href="#menu-section">Obedové menu</a></li>
+                <li><a class="nav-link" href="#about">O projekte</a></li>
+            </ul>
         </div>
     </nav>
 
@@ -98,29 +96,89 @@
             </div>
         </section>
 
+        <section id="about">
+            <div class="about-container">
+                <h2>O projekte</h2>
+
+                <p>
+                    Cieľom projektu je vytvoriť prehľad obedových menu
+                    reštaurácií v okolí FEI STU v Bratislave. Používateľ
+                    si môže vybrať deň v týždni a zobraziť ponuku
+                    jednotlivých reštaurácií.
+                </p>
+
+                <h3>Zdroje dát</h3>
+
+                <p>
+                    Údaje o obedových menu sa spracúvajú z HTML súborov
+                    uložených v priečinku <code>source</code>. Tieto súbory
+                    obsahujú údaje získané z webových stránok jednotlivých
+                    reštaurácií:
+                </p>
+                <ul>
+                    <li>
+                        <a href="https://eatandmeet.sk/" target="_blank"
+                        rel="noopener noreferrer">
+                            Eat &amp; Meet
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.nasehospoda-karloveska.sk/"
+                        target="_blank" rel="noopener noreferrer">
+                            Naše Hospoda
+                        </a>
+                    </li>
+                    <li>
+                        <a href="https://www.restauracia-drag.sk/restauracia-drag"
+                        target="_blank" rel="noopener noreferrer">
+                            Reštaurácia Drag
+                        </a>
+                    </li>
+                </ul>
+
+                <p>
+                    Pomocou JavaScriptu a knižnice jQuery sa z HTML
+                    dokumentov získavajú názvy jedál, dni, kategórie
+                    jedál a informácie o alergénoch. Údaje z jednotlivých
+                    reštaurácií sa následne zjednocujú do rovnakej štruktúry,
+                    aby sa dali zobraziť jednotným spôsobom.
+                </p>
+
+                <p>
+                    Používateľ môže filtrovať menu podľa dňa v týždni
+                    a vybrať si reštaurácie, ktorých ponuku chce zobraziť.
+                    Spracované údaje sa ukladajú do úložiska localStorage
+                    v prehliadači a počas toho istého dňa sa môžu načítať
+                    bez opätovného spracovania zdrojových súborov.
+                    Menu je možné manuálne aktualizovať.
+                </p>
+
+            </div>
+        </section>
+
     </main>
 
     <footer>
         <div class="footer-content">
-        <p>Použité knižnice:</p>
+            <p>Použité knižnice:</p>
 
-        <ul class="libraries">
-            <li>
-                <a href="https://getbootstrap.com/"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    Bootstrap 5
-                </a>
-            </li>
-            <li>
-                <a href="https://jquery.com/"
-                   target="_blank"
-                   rel="noopener noreferrer">
-                    jQuery
-                </a>
-            </li>
-        </ul>
-    </div>
+            <ul class="libraries">
+                <li>
+                    <a href="https://getbootstrap.com/"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                        Bootstrap 5
+                    </a>
+                </li>
+                <li>
+                    <a href="https://jquery.com/"
+                    target="_blank"
+                    rel="noopener noreferrer">
+                        jQuery
+                    </a>
+                </li>
+            </ul>
+        </div>
     </footer>
 
 

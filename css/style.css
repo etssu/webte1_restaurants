@@ -151,8 +151,8 @@ footer {
 }
 
 #clear-menu-cache:hover {
-    background-color: #E6AACE;
-    border-color: #E6AACE;
+    background-color: var(--color-accent);
+    border-color: var(--color-accent);
     transform: translateY(-2px);
 }
 
@@ -177,11 +177,25 @@ footer {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.main-nav ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.main-nav li {
+    flex: 0 1 180px;
 }
 
 .main-nav .nav-link {
-    flex: 0 1 180px;
+    white-space: nowrap;
+    display: block;
     padding: 0.75rem 1rem;
     border: 2px solid transparent;
     border-radius: var(--radius-button);
@@ -196,15 +210,10 @@ footer {
 }
 
 .main-nav .nav-link:hover {
-    background-color: #E6AACE;;
+    background-color: #D98DB9;
     transform: translateY(-2px);
 }
 
-.main-nav .nav-link.active {
-    background-color: #D98DB9;
-    border-color: #D98DB9;
-    color: var(--color-text);
-}
 
 main {
   max-width: 1100px;
@@ -301,6 +310,14 @@ main {
   color: var(--color-secondary);
   font-size: 1.5rem;
   font-weight: 700;
+}
+
+.menu-unavailable {
+    padding: 1rem;
+    border-radius: var(--radius-button);
+    background-color: var(--color-surface);
+    color: var(--color-secondary);
+    text-align: center;
 }
 
 /* Meal cards */
@@ -430,6 +447,57 @@ main {
     outline-offset: 3px;
 }
 
+/* About project */
+.about-section {
+    padding: 3rem 0;
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+.about-section h2 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.about-section h3 {
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+    color: var(--color-secondary);
+}
+
+.about-section p {
+    line-height: 1.7;
+    margin-bottom: 1rem;
+}
+
+.about-section ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.about-section li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.about-section a {
+    color: var(--color-secondary);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color var(--transition-default);
+}
+
+.about-section a:hover {
+    color: var(--color-accent);
+}
+
+.about-section code {
+    padding: 0.15rem 0.35rem;
+    border-radius: 4px;
+    background-color: var(--color-primary);
+    color: var(--color-text);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .meal-card,
   .restaurant-card,
@@ -449,6 +517,11 @@ main {
     padding: 16px;
   }
 
+  html,
+  body {
+      overflow-x: hidden;
+  }
+
   main {
     margin: 16px auto;
     padding: 0 12px;
@@ -458,25 +531,34 @@ main {
         display: block;
         margin: 0.75rem auto;
     }
-
   .main-nav {
-      display: none !important;
+    display: none;
   }
 
   .main-nav.open {
-      display: block !important;
+      display: block;
   }
 
   .main-nav .container {
-      display: flex;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+    }
+
+  .main-nav ul {
       flex-direction: column;
-      align-items: stretch;
+      width: 100%;
       gap: 0.5rem;
   }
 
-  .main-nav .nav-link {
+  .main-nav li {
       flex: none;
       width: 100%;
+  }
+
+  .main-nav .nav-link {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      white-space: nowrap;
   }
 
   .header-title h1 {

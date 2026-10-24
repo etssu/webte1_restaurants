@@ -18,8 +18,13 @@ function cleanText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
 
-function loadHtmlJQuery(url) {
-  return $.ajax({ url: url, dataType: "text" });
+async function loadHtmlJQuery(url) {
+  try {
+    return await $.ajax({ url: url, dataType: "text" });
+  } catch (error) {
+    console.error("Nepodarilo sa načítať stránku:", url, error);
+    return null;
+  }
 }
 
 function parseHtml(html) {
@@ -393,6 +398,18 @@ function renderMenus(restaurant, menus, wholeWeek = false) {
   }
 
   block.empty();
+  const hasMeals = menus.some(
+    menu => menu.meals && menu.meals.length > 0
+  );
+
+  if (!hasMeals) {
+    $("<p>")
+      .addClass("menu-unavailable")
+      .text("Menu na tento deň nie je k dispozícii.")
+      .appendTo(block);
+
+    return;
+  }
 
   $("<h2>")
     .addClass("restaurant-menu-title")
@@ -616,15 +633,35 @@ async function main() {
     if (cachedRestaurants) {
       restaurants = cachedRestaurants;
     } else {
-      const [htmlEAM, htmlNH, htmlRD] = await Promise.all([
+      const results = await Promise.allSettled([
         loadHtmlJQuery(SOURCE_EAT_AND_MEET),
         loadHtmlJQuery(SOURCE_NASE_HOSPODA),
         loadHtmlJQuery(SOURCE_RESTAURACIA_DRAG),
       ]);
 
-      const docEAM = parseHtml(htmlEAM);
-      const docNH = parseHtml(htmlNH);
-      const docRD = parseHtml(htmlRD);
+      const sourceNames = [
+        "Eat & Meet",
+        "Naše Hospoda",
+        "Reštaurácia Drag",
+      ];
+
+      const htmlResults = results.map((result, index) => {
+        if (result.status === "rejected") {
+          console.error(
+            `Nepodarilo sa načítať HTML pre ${sourceNames[index]}.`,
+            result.reason
+          );
+          return "";
+        }
+
+        return result.value || "";
+      });
+
+      const [htmlEAM, htmlNH, htmlRD] = htmlResults;
+
+      const docEAM = parseHtml(htmlEAM || "");
+      const docNH = parseHtml(htmlNH || "");
+      const docRD = parseHtml(htmlRD || "");
 
       const restaurantEAM = normalizeRestaurant(
         "Eat & Meet",
