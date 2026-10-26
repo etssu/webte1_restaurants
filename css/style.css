@@ -132,7 +132,7 @@ footer {
         box-shadow 0.2s ease;
 }
 
-/* Основná кнопка */
+/* Refresh button */
 #refresh-menu {
     background-color: #344966;
     color: #ffffff;
@@ -144,7 +144,7 @@ footer {
     box-shadow: 0 4px 10px rgba(52, 73, 102, 0.2);
 }
 
-/* Кнопка очистки */
+/* Clear button */
 #clear-menu-cache {
     background-color: transparent;
     color: #344966;

@@ -5,15 +5,19 @@ SOURCE_RESTAURACIA_DRAG = "source/restauracia-drag.html";
 let restaurants = [];
 let visibleRestaurants = new Set();
 const today = new Date().getDay();
+
+// Select Monday by default when the current day is Saturday or Sunday.
 let selectedDay = today === 0 || today === 6 ? 1 : today;
 let showWholeWeek = false;
 
 const DAYS_SK = ["Pondelok", "Utorok", "Streda", "Štvrtok", "Piatok"];
 
+
 function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// To remove extra whitespace 
 function cleanText(text) {
   return text.replace(/\s+/g, " ").trim();
 }
@@ -31,6 +35,7 @@ function parseHtml(html) {
   return new DOMParser().parseFromString(html, "text/html");
 }
 
+// Convert meals to a common data structure
 function normalizeMeal(meal) {
   return {
     title: meal.title || "",
@@ -38,9 +43,10 @@ function normalizeMeal(meal) {
     type: meal.type || "",
     allergens: meal.allergens || "",
     price: meal.price || "",
-    image: meal.image || "",
   };
 }
+
+// Store different types of menu in a similarm form
 function normalizeMenu(day, date, category, meals, title = "") {
   return {
     title: title,
@@ -61,6 +67,7 @@ function getMealCategory(meal) {
   return "Hlavné jedlá";
 }
 
+// Use the same structure for every restaurant
 function normalizeRestaurant(restaurant, menus, url, address) {
   return {
     restaurant: restaurant,
@@ -106,7 +113,6 @@ function parseEatAndMeetJQuery(doc) {
           )
             .replace(/[()]/g, "")
             .replace(/\s/g, ""),
-          image: $meal.find("img").attr("src"),
         });
       });
 
@@ -147,7 +153,6 @@ function parseEatAndMeetCommonMealsJQuery(doc) {
           type: type,
           price: cleanText($meal.find(".price").text()),
           allergens: match ? match[1].replace(/\s/g, "") : "",
-          image: $meal.find("img").attr("src"),
         });
       });
     });
@@ -647,6 +652,7 @@ async function main() {
     if (cachedRestaurants) {
       restaurants = cachedRestaurants;
     } else {
+      // Load all three source websites concurrently, even if one request fails
       const results = await Promise.allSettled([
         loadHtmlJQuery(SOURCE_EAT_AND_MEET),
         loadHtmlJQuery(SOURCE_NASE_HOSPODA),
@@ -659,6 +665,7 @@ async function main() {
         "Reštaurácia Drag",
       ];
 
+      // Replace failed requests with empty HTML so the other sources can still be processed
       const htmlResults = results.map((result, index) => {
         if (result.status === "rejected") {
           console.error(
@@ -717,6 +724,7 @@ async function main() {
 
     renderRestaurants(restaurants);
 
+    // Update the selected weekday and disable whole-week view
     $("#day-selector")
       .off("click", ".day-button:not(#week-view-toggle)")
       .on("click", ".day-button:not(#week-view-toggle)", function () {
@@ -735,6 +743,7 @@ async function main() {
 
     $("#day-selector .day-button").removeClass("active");
 
+    // Toggle between displaying one weekday and displaying the whole week
     if (showWholeWeek) {
       $("#week-view-toggle")
         .addClass("active")
@@ -797,6 +806,7 @@ $("#menu-toggle").on("click", function () {
   $(this).attr("aria-expanded", String(isOpen));
 });
 
+// Remove cached data and reload the menus from the source HTML files
 $("#refresh-menu").on("click", async function () {
   $("#menu-loading").prop("hidden", false);
   $(this).prop("disabled", true);
@@ -810,6 +820,7 @@ $("#refresh-menu").on("click", async function () {
   }
 });
 
+// Clear stored and in-memory menu data 
 $("#clear-menu-cache").on("click", function () {
   localStorage.removeItem("restaurantMenus");
 

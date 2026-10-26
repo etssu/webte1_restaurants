@@ -4,6 +4,8 @@ Meno: Romina Bediak
 
 Krúžok: pondelok 11:00
 
+Web: [odkaz](https://webte1.fei.stuba.sk/~xbediak/Z2_Bediak/)
+
 ## O projekte
 
 Webová stránka zobrazuje obedové menu troch reštaurácií v okolí Fakulty elektrotechniky a informatiky STU v Bratislave. Umožňuje používateľom prezerať denné menu podľa jednotlivých dní v týždni alebo zobraziť menu na celý týždeň. Pomocou filtrov je možné vybrať reštaurácie, ktorých ponuka sa má zobraziť.
@@ -14,11 +16,13 @@ Spracované údaje sa ukladajú do prehliadača pomocou localStorage, aby sa nem
 
 ## Zdroje
 
-Eat & Meet: [eatandmeet.sk](https://eatandmeet.sk/)
+* Eat & Meet: [eatandmeet.sk](https://eatandmeet.sk/)
 
-Naše Hospoda: [nasehospoda-karloveska.sk](https://www.nasehospoda-karloveska.sk/)
+* Naše Hospoda: [nasehospoda-karloveska.sk](https://www.nasehospoda-karloveska.sk/)
 
-Reštaurácia Drag: [restauracia-drag.sk](https://www.restauracia-drag.sk/restauracia-drag)
+* Reštaurácia Drag: [restauracia-drag.sk](https://www.restauracia-drag.sk/restauracia-drag)
+
+* Font: [Nunito](https://fonts.google.com/specimen/Nunito) - licensed under the SIL Open Font License, Version 1.1 (OFL-1.1).
 
 
 ## Použitie AI
