@@ -299,6 +299,18 @@ main {
   padding: 1rem 0 2rem;
 }
 
+.menu-empty-selection,
+.cache-cleared-message,
+.menu-unavailable
+{
+  text-align: center;
+  margin: auto;
+  padding: 1rem;
+  border-radius: var(--radius-button);
+  border: 1px solid var(--color-secondary);
+  background-color: var(--color-surface);
+}
+
 .menu-category {
   margin-bottom: 2rem;
 }
@@ -310,14 +322,6 @@ main {
   color: var(--color-secondary);
   font-size: 1.5rem;
   font-weight: 700;
-}
-
-.menu-unavailable {
-    padding: 1rem;
-    border-radius: var(--radius-button);
-    background-color: var(--color-surface);
-    color: var(--color-secondary);
-    text-align: center;
 }
 
 /* Meal cards */

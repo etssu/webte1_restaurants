@@ -403,11 +403,6 @@ function renderMenus(restaurant, menus, wholeWeek = false) {
   );
 
   if (!hasMeals) {
-    $("<p>")
-      .addClass("menu-unavailable")
-      .text("Menu na tento deň nie je k dispozícii.")
-      .appendTo(block);
-
     return;
   }
 
@@ -545,9 +540,17 @@ function renderRestaurants(restaurants) {
     });
 }
 
-
 function selectDay(dayNumber) {
-  $("#meals-container").empty();
+  const container = $("#meals-container");
+  container.empty();
+
+  if (visibleRestaurants.size === 0) {
+    $("<p>").addClass("menu-empty-selection")
+    .text("Vyberte si aspoň jednu reštauráciu, aby sa zobrazilo obedové menu.")
+    .appendTo("#meals-container");
+
+    return;
+  }
 
   const dayButtons = $("#day-selector .day-button")
     .not("#week-view-toggle");
@@ -579,6 +582,17 @@ function selectDay(dayNumber) {
 
     renderMenus(restaurant, menus, showWholeWeek);
   });
+
+  if (container.find(".meal-card").length === 0) {
+    $("<p>")
+      .addClass("menu-unavailable")
+      .text(
+        showWholeWeek
+          ? "Menu nie je k dispozícii."
+          : "Menu na tento deň nie je k dispozícii."
+      )
+      .appendTo(container);
+  }
 }
 
 function getTodayKey() {
@@ -719,8 +733,20 @@ async function main() {
         selectDay(selectedDay);
       });
 
-    $(`#day-selector .day-button[data-day="${selectedDay}"]`)
-      .addClass("active");
+    $("#day-selector .day-button").removeClass("active");
+
+    if (showWholeWeek) {
+      $("#week-view-toggle")
+        .addClass("active")
+        .attr("aria-pressed", "true");
+    } else {
+      $("#week-view-toggle")
+        .removeClass("active")
+        .attr("aria-pressed", "false");
+
+      $(`#day-selector .day-button[data-day="${selectedDay}"]`)
+        .addClass("active");
+    }
 
     $("#week-view-toggle")
       .off("click")
@@ -786,7 +812,17 @@ $("#refresh-menu").on("click", async function () {
 
 $("#clear-menu-cache").on("click", function () {
   localStorage.removeItem("restaurantMenus");
+
+  restaurants.forEach(restaurant => {
+    restaurant.menus = [];
+  });
+
   $("#meals-container").empty();
+
+  $("<p>")
+    .addClass("menu-empty-selection")
+    .text("Uložené dáta boli vymazané. Obnovte menu pre opätovné načítanie.")
+    .appendTo("#meals-container");
 
   alert("Uložené dáta boli vymazané.");
 });
